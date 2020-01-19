@@ -13,8 +13,10 @@ error_reporting(7);
 
 define('START_TIME', microtime(true));
 define('ROOT_DIR', dirname(__DIR__). '/');
-define('LIB_DIR', ROOT_DIR . 'lib');
+define('LIB_DIR', ROOT_DIR . 'lib/');
 
+$black_domain_list = require_once LIB_DIR . 'black_domain_list.php';
+require_once LIB_DIR . 'addressMaker.class.php';
 define('WILDCARD_SRC', ROOT_DIR . 'origin-files/wildcard-src-easylist.txt');
 define('WHITERULE_SRC', ROOT_DIR . 'origin-files/whiterule-src-easylist.txt');
 
@@ -48,6 +50,52 @@ $ARR_MERGED_WILD_LIST = array(
     'iflyad.*.openstorage.cn' => null,
     '*customstat*.51togic.com' => null,
     'appcloud*.zhihu.com' => null,
+    'sf*-ttcdn-tos.pstatp.com' => null,
+    'ad*.molitv.cn' => null,
+    'ads*-adnow.com' => null,
+    'aeros*.tk' => null,
+    'analyzer*.fc2.com' => null,
+    'admicro*.vcmedia.vn' => null,
+    'xn--xhq9mt12cf5v.*' => null,
+    'freecontent.*' => null,
+    'hostingcloud.*' => null,
+    'jshosting.*' => null,
+    'flightzy.*' => null,
+    'sunnimiq*.cf' => null,
+
+);
+
+$ARR_REGEX_LIST = array(
+    '/^01daa\.[a-z]+\.com$/' => null,
+    '/^9377[a-z]{2}\.com$/' => null,
+//    '/^[1-3]\.[0-9a-z\.\-]+\.(com|cn|net|org)$/' => null,
+//    '/^a1\.[0-9a-z\.]+\.(com|cn|org|net|me)$/' => null,
+    '/^ad([0-9]|m|s)?\./' => null,
+    '/^affiliat(es|ion|e)\./' => null,
+    '/^afgr[0-9]{1,2}\.com$/' => null,
+    '/^analytics(\-|\.)/' => null,
+    '/^counter(\-|\.)/' => null,
+    '/^pixels?\./' => null,
+    '/^syma[a-z]\.cn$/' => null,
+    '/^widgets?\./' => null,
+    '/^(web)?stats?\./' => null,
+    '/^track(er|ing)?\./' => null,
+    '/^tongji\./' => null,
+    '/^toolbar\./' => null,
+    '/^adservice\.google\./' => null,
+);
+
+$ARR_WHITE_RULE_LIST = array(
+    '@@||github.com^',
+    '@@||tracker.ipv6.scau.edu.cn^',
+    '@@||tracker.openbittorrent.com^',
+    '@@||tracker.chdbits.org^',
+    '@@||tracker.m-team.cc^',
+    '@@||tracker.keepfrds.com^',
+    '@@||tracker.hdcmct.org^',
+    '@@||tracker.fastdownload.xyz^',
+    '@@||tracker.bt4g.com^',
+    '@@||tracker.publictorrent.net^',
 );
 
 if(PHP_SAPI != 'cli'){
@@ -106,6 +154,19 @@ while(!feof($src_fp)){
     }
 
     $matched = false;
+    foreach($ARR_REGEX_LIST as $regex_str => $regex_row){
+        if(preg_match($regex_str, substr(trim($row), 2, -1))){
+            $matched = true;
+            if(!array_key_exists($regex_str, $wrote_wild)){
+                fwrite($new_fp, "${regex_str}\n");
+                $wrote_wild[$regex_str] = 1;
+            }
+        }
+    }
+
+    if($matched){
+        continue;
+    }
 
     foreach ($arr_wild_src as $core_str => $wild_row){
         $match_rule = str_replace('*', '.*', $core_str);
@@ -126,9 +187,10 @@ while(!feof($src_fp)){
 }
 
 //按需写入白名单规则
-$whiterule_fp = fopen(WHITERULE_SRC, 'r');
-while(!feof($whiterule_fp)){
-    $row = fgets($whiterule_fp, 1024);
+$wrote_whitelist = array();
+$whiterule = file(WHITERULE_SRC, FILE_SKIP_EMPTY_LINES);
+$ARR_WHITE_RULE_LIST = array_merge($ARR_WHITE_RULE_LIST, $whiterule);
+foreach ($ARR_WHITE_RULE_LIST as $row){
     if(empty($row) || $row{0} !== '@' || $row{1} !== '@'){
         continue;
     }
@@ -137,15 +199,29 @@ while(!feof($whiterule_fp)){
         continue;
     }
     foreach($wrote_wild as $core_str => $val){
-        $match_rule = str_replace('*', '.*', $core_str);
-        if(preg_match("/\|${match_rule}\^/", $row)){
-            fwrite($new_fp, "@@||${matches[1]}^");
+        if($core_str{0} === '/'){
+            $match_rule = $core_str;
+        }else{
+            $match_rule = str_replace('*', '.*', $core_str);
+            $match_rule = "/${match_rule}/";
+        }
+        if(preg_match($match_rule, $matches[1])) {
+            $domain = addressMaker::extract_main_domain($matches[1]); //@TODO 注意！这里假设白名单域名无通配符
+            if(array_key_exists($domain, $black_domain_list) ||
+                (is_array($black_domain_list[$domain]) && in_array($matches[1], $black_domain_list[$domain]))
+            ){
+                continue;
+            }
+            if(array_key_exists($matches[1], $wrote_whitelist)){
+                continue;
+            }
+            $wrote_whitelist[$matches[1]] = null;
+            fwrite($new_fp, "@@||${matches[1]}^\n");
         }
     }
 }
 
 fclose($src_fp);
 fclose($new_fp);
-fclose($whiterule_fp);
-var_dump(rename($src_file . '.txt', $src_file));
+rename($src_file . '.txt', $src_file);
 echo 'Time cost:', microtime(true) - START_TIME, "s, at ", date('m-d H:i:s'), "\n";

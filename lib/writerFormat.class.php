@@ -6,6 +6,7 @@
  */
 
 !defined('ROOT_DIR') && die('Access Denied.');
+
 class writerFormat{
     /*dnsmasq支持格式的屏蔽广告列表*/
     const DNSMASQ = array(
@@ -18,7 +19,7 @@ class writerFormat{
     /*easylist 兼容格式的屏蔽广告列表*/
     const EASYLIST = array(
         'format' => '||{DOMAIN}^',
-        'header' => "#TIME={DATE}\n#URL={URL}\n",
+        'header' => "!TIME={DATE}\n!URL={URL}\n",
         'name' => 'easylist',
         'filename' => 'anti-ad-easylist.txt'
     );

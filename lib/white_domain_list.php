@@ -25,6 +25,7 @@ return array(
     'gia.jd.com' => true, //京东滑动验证码
     'edge.yunjiasu.com' => true, //百度云加速javascript快速加载功能
     'cd.bendibao.com' => true, //成都本地宝
+    'm.qpic.cn' => true, // qq，微信，QQ空间等用到的静态资源域名
 
 
     'activate.adobe.com' => true,
@@ -52,7 +53,6 @@ return array(
     'activation.cyberlink.com' => true,
     'cap.cyberlink.com' => true,
     'activation.easeus.com' => true,
-    'track.easeus.com' => true,
     'upd.faronicslabs.com' => true,
     'backup.lumion3d.com' => true,
     'backup.lumion3d.net' => true,
@@ -64,8 +64,6 @@ return array(
     'www.bitsumactivationserver.com' => true,
     'licensing.tableausoftware.com' => true,
     'activation.cloud.techsmith.com' => true,
-    'binaryage-leechgate.herokuapp.com' => true,
     'updates-s3.binaryage.com' => true,
     'reg.wisecleaner.com' => true,
-    'cbs.wondershare.com' => true,
 );

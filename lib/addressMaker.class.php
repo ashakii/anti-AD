@@ -10,9 +10,16 @@
  */
 !defined('ROOT_DIR') && die('Access Denied.');
 
-class addressMaker {
+class addressMaker{
 
     const LINK_URL = 'https://github.com/privacy-protection-tools/anti-AD';
+    const TMP_NO_STRICT = array( //临时需要关闭严格模式的主域名
+        'herokuapp.com' => null,
+        'vidoza.net' => null,
+        'nahnoji.cz' => null,
+        'cloudfront.net' => null,
+    );
+
     /**
      * 分离域名
      *
@@ -24,7 +31,15 @@ class addressMaker {
             return "";
         }
 
-        $str_reg = '/^(?:(?:[a-z0-9\-]+\.)*?|\.)?([a-z0-9\-]+(\.com|\.cn|\.net|\.org|\.cn|\.me|\.co|\.info|\.cc|\.tv';
+        $str_reg = '/^(?:(?:[a-z0-9\-]+\.)*?|\.)?([a-z0-9\-]+(';
+        /************start CN域名的特殊处理规则，其中包括了各行政区特别后缀的cn域名*****************************/
+        $str_reg .= '\.ac\.cn|\.ah\.cn|\.bj\.cn|\.com\.cn|\.cq\.cn|\.fj\.cn|\.gd\.cn|\.gov\.cn|\.gs\.cn';
+        $str_reg .= '|\.gx\.cn|\.gz\.cn|\.ha\.cn|\.hb\.cn|\.he\.cn|\.hi\.cn|\.hk\.cn|\.hl\.cn|\.hn\.cn';
+        $str_reg .= '|\.jl\.cn|\.js\.cn|\.jx\.cn|\.ln\.cn|\.mo\.cn|\.net\.cn|\.nm\.cn|\.nx\.cn|\.org\.cn';
+        $str_reg .= '|\.qh\.cn|\.sc\.cn|\.sd\.cn|\.sh\.cn|\.sn\.cn|\.sx\.cn|\.tj\.cn|\.tw\.cn|\.xj\.cn';
+        $str_reg .= '|\.xz\.cn|\.yn\.cn|\.zj\.cn|\.edu.cn';
+        /************end CN域名的特殊处理规则，其中包括了各行政区特别后缀的cn域名******************************/
+        $str_reg .= '|\.cn|\.com|\.net|\.org|\.me|\.co|\.info|\.cc|\.tv';
         $str_reg .= '|\.pw|\.biz|\.top|\.win|\.bid|\.cf|\.club|\.ne|\.de|\.la|\.us|\.mobi|\.hn|\.asia';
         $str_reg .= '|\.jp|\.tw|\.am|\.hk|\.site|\.live|\.xyz|\.space|\.fr|\.es|\.nl|\.au|\.in|\.ru';
         $str_reg .= '|\.su|\.world|\.io|\.trade|\.bet|\.im|\.fm|\.today|\.wang|\.rocks|\.vip|\.eu|\.run';
@@ -35,9 +50,19 @@ class addressMaker {
         $str_reg .= '|\.uk|\.ad|\.ac|\.md|\.ml|\.cm|\.re|\.ph|\.my|\.lu|\.network|\.sh|\.fun|\.az|\.cx|\.ga';
         $str_reg .= '|\.ae|\.bz|\.gq|\.gs|\.pk|\.sex|\.stream|\.support|\.pub|\.nz|\.ng|\.zw|\.sx|\.studio|\.media|\.zone';
         $str_reg .= '|\.icu|\.ie|\.li|\.bar|\.video|\.wiki|\.ltd|\.cash|\.pink|\.loan|\.gdn|\.app|\.ovh|\.land|\.st|\.how';
+        $str_reg .= '|\.kim|\.download|\.ag|\.technology|\.company|\.guru|\.gt|\.sg|\.photo|\.digital|\.one|\.tr';
+        $str_reg .= '|\.show|\.sncf|\.uz|\.as|\.ee|\.fyi|\.cloud|\.group|\.promo|\.party|\.services|\.life|\.no';
+        $str_reg .= '|\.watch|\.works|\.buzz|\.best|\.center|\.host|\.style|\.press|\.solutions|\.exchange|\.wtf';
+        $str_reg .= '|\.delivery|\.page|\.webcam|\.cam|\.supply|\.accountant|\.systems|\.agency|\.science|\.awe';
+        $str_reg .= '|\.gd|\.review|\.tc|\.mn|\.cool|\.monster|\.do|\.bi|\.news|\.boom|\.lol|\.events|\.jobs';
+        $str_reg .= '|\.ooo|\.social|\.ninja|\.blue|\.plus|\.racing|\.ht|\.tl|\.cat|\.tf|\.al|\.vc|\.cr';
         $str_reg .= ')';
 
-        $str_reg .= '(\.cn|\.hk|\.tw|\.uk|\.jp|\.kr|\.th|\.au|\.ua|\.so|\.br|\.sg|\.pt|\.ec|\.ar|\.my|\.tr|\.bd|\.mk|\.za|\.mt)?)$/';
+        $str_reg .= '(\.hk|\.tw|\.uk|\.jp|\.kr|\.th|\.au|\.ua|\.so|\.br|\.sg|\.pt|\.ec|\.ar|\.my';
+        $str_reg .= '|\.tr|\.bd|\.mk|\.za|\.mt|\.sm|\.ge|\.kg|\.ke|\.de|\.ve|\.es|\.ru|\.pk|\.mx';
+        $str_reg .= '|\.nz|\.py|\.pe|\.ph|\.pl|\.ng|\.pa|\.fj';
+
+        $str_reg .= ')?)$/';
         if(preg_match($str_reg, $str_domain, $matches)){
             return strval($matches[1]);
         }
@@ -49,10 +74,11 @@ class addressMaker {
     /**
      * 从 easylist类源文件中提取可用地址
      *
-     * @param $str_easylist
+     * @param String $str_easylist 原始的easylist列表字符串
+     * @param Boolean $strict_mode 严格模式，启用时将屏蔽该域所在的主域名，例如www.baidu.com，将获取到baidu.com并写入最终列表
      * @return array
      */
-    public static function get_domain_from_easylist($str_easylist){
+    public static function get_domain_from_easylist($str_easylist, $strict_mode = false){
         $strlen = strlen($str_easylist);
         if($strlen < 10){
             return array();
@@ -81,8 +107,12 @@ class addressMaker {
                 }else{
                     $row = $matches[1];
                 }
-
-                $arr_domains[self::extract_main_domain($matches[1])][] = $row;
+                $main_domain = self::extract_main_domain($matches[1]);
+                if($strict_mode && !array_key_exists($main_domain, self::TMP_NO_STRICT)){
+                    $arr_domains[$main_domain] = array($main_domain);
+                }else{
+                    $arr_domains[$main_domain][] = $row;
+                }
             }
         }
 
@@ -92,10 +122,11 @@ class addressMaker {
     /**
      * 从hosts或dnsmasq类文件中提取地址
      *
-     * @param $str_hosts
+     * @param String $str_hosts 原始的hosts字符串
+     * @param Boolean $strict_mode 严格模式，启用时将屏蔽该域所在的主域名，例如www.baidu.com，将获取到baidu.com并写入最终列表
      * @return array
      */
-    public static function get_domain_list($str_hosts){
+    public static function get_domain_list($str_hosts, $strict_mode = false){
         $strlen = strlen($str_hosts);
         if($strlen < 3){
             return array();
@@ -124,7 +155,12 @@ class addressMaker {
             if(strpos($row[1], '.') === false){
                 continue;
             }
-            $arr_domains[self::extract_main_domain($row[1])][] = $row[1];
+            $main_domain = self::extract_main_domain($row[1]);
+            if($strict_mode && !array_key_exists($main_domain, self::TMP_NO_STRICT)){
+                $arr_domains[$main_domain] = array($main_domain);
+            }else{
+                $arr_domains[$main_domain][] = $row[1];
+            }
         }
 
         return $arr_domains;
