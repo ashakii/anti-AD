@@ -26,6 +26,10 @@ return array(
     'edge.yunjiasu.com' => true, //百度云加速javascript快速加载功能
     'cd.bendibao.com' => true, //成都本地宝
     'm.qpic.cn' => true, // qq，微信，QQ空间等用到的静态资源域名
+    'ipify.org' => true, // 获得公网 IP
+    'pass.1688.com' => true, // 阿里巴巴网站访问不正常
+    'cedexis.net' => true, // windowsupdate CNAME
+    'y0.cn' => true, // 短网址服务，涉及本次丁香医生实时疫情页面 http://y0.cn/sari
 
 
     'activate.adobe.com' => true,

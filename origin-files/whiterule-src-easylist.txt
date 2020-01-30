@@ -115,6 +115,7 @@
 @@||crossmap.com^$generichide
 @@||cwtv.com^$generichide
 @@||cy.com^$generichide
+@@||d1-dm.com^$generichide
 @@||dailyfeed.co.uk^$generichide
 @@||dailyhealthpost.com^$generichide
 @@||dailymail.co.uk^$generichide
@@ -321,6 +322,7 @@
 @@||newseveryday.com^$generichide
 @@||newsthump.com^$generichide
 @@||nfmovies.com^$generichide
+@@||niotv.com^$generichide
 @@||nme.com^$generichide
 @@||nobugin.com^$generichide
 @@||nodkey.xyz^$genericblock,generichide

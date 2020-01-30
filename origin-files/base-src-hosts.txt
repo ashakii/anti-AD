@@ -3368,6 +3368,7 @@
 127.0.0.1 ee.w82ph.cn
 127.0.0.1 ee.wh723.cn
 127.0.0.1 ee.wv26d.cn
+127.0.0.1 ee.wz382.cn
 127.0.0.1 ee.x0u4o.cn
 127.0.0.1 ee.x8r9m.cn
 127.0.0.1 ee.xq375.cn
@@ -5867,6 +5868,7 @@
 127.0.0.1 m.wxhh678.com
 127.0.0.1 m.wxjrd.cn
 127.0.0.1 m.wywna.cn
+127.0.0.1 m.wz382.cn
 127.0.0.1 m.x2e8id.cn
 127.0.0.1 m.x316f.cn
 127.0.0.1 m.x78tg.cn
@@ -7885,7 +7887,6 @@
 127.0.0.1 shuttle.bayescom.com
 127.0.0.1 shzyjbr.wtdtjs.rocks
 127.0.0.1 si.efwga.xyz
-127.0.0.1 si1.go2yd.com
 127.0.0.1 sigo99.com
 127.0.0.1 simaba.taobao.com
 127.0.0.1 simba.m.taobao.com
@@ -8380,6 +8381,7 @@
 127.0.0.1 t.pingzei.com
 127.0.0.1 t.pzclw.cn
 127.0.0.1 t.qiuqiuqipai.com
+127.0.0.1 t.sdpaji.com
 127.0.0.1 t.sj.qq.com
 127.0.0.1 t.supermario.xyz
 127.0.0.1 t.targetuse.com
@@ -8858,6 +8860,7 @@
 127.0.0.1 uuidksinc.net
 127.0.0.1 uun.1uandun.com
 127.0.0.1 uusee.adsame.com
+127.0.0.1 uvu.nojmlxq.cn
 127.0.0.1 uwcu.0b6h.cn
 127.0.0.1 uxaz.fxnfk.cn
 127.0.0.1 uxek.85nv96.cn
@@ -8957,6 +8960,7 @@
 127.0.0.1 ve.tsdlp.com
 127.0.0.1 vebadu.com
 127.0.0.1 vegaschina.cn
+127.0.0.1 veim.lrswl.com
 127.0.0.1 ver.touclick.com
 127.0.0.1 vg.aty.sohu.com
 127.0.0.1 vg02h8z1ul.me
@@ -10174,6 +10178,7 @@
 127.0.0.1 xn--fjqz50cv5q3so.ltd
 127.0.0.1 xn--mtso8sj6menhyil.online
 127.0.0.1 xn--wxtr9fwyxk9c.top
+127.0.0.1 xn--xhq9mt12cf5v.ink
 127.0.0.1 xn--xhq9mt12cf5v.website
 127.0.0.1 xndjh.hebiz.cn
 127.0.0.1 xpe.cxaerp.com

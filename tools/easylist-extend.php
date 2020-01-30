@@ -12,7 +12,7 @@ set_time_limit(0);
 error_reporting(7);
 
 define('START_TIME', microtime(true));
-define('ROOT_DIR', dirname(__DIR__). '/');
+define('ROOT_DIR', dirname(__DIR__) . '/');
 define('LIB_DIR', ROOT_DIR . 'lib/');
 
 $black_domain_list = require_once LIB_DIR . 'black_domain_list.php';
@@ -22,7 +22,6 @@ define('WHITERULE_SRC', ROOT_DIR . 'origin-files/whiterule-src-easylist.txt');
 
 $ARR_MERGED_WILD_LIST = array(
     'ad*.udn.com' => null,
-    'cnt*rambler.ru' => null,
     '*.mgr.consensu.org' => null,
     'vs*.gzcu.u3.ucweb.com' => null,
     'ad*.goforandroid.com' => null,
@@ -68,7 +67,7 @@ $ARR_MERGED_WILD_LIST = array(
 $ARR_REGEX_LIST = array(
     '/^01daa\.[a-z]+\.com$/' => null,
     '/^9377[a-z]{2}\.com$/' => null,
-//    '/^[1-3]\.[0-9a-z\.\-]+\.(com|cn|net|org)$/' => null,
+    '/^[1-3]\.[0-9a-z\.\-]+\.(com|cn|net|org|cc|me)$/' => null,
 //    '/^a1\.[0-9a-z\.]+\.(com|cn|org|net|me)$/' => null,
     '/^ad([0-9]|m|s)?\./' => null,
     '/^affiliat(es|ion|e)\./' => null,
@@ -79,23 +78,26 @@ $ARR_REGEX_LIST = array(
     '/^syma[a-z]\.cn$/' => null,
     '/^widgets?\./' => null,
     '/^(web)?stats?\./' => null,
-    '/^track(er|ing)?\./' => null,
+    '/^track(ing)?\./' => null,
     '/^tongji\./' => null,
     '/^toolbar\./' => null,
     '/^adservice\.google\./' => null,
 );
 
+//对通配符匹配或正则匹配增加的额外赦免规则
 $ARR_WHITE_RULE_LIST = array(
     '@@||github.com^',
-    '@@||tracker.ipv6.scau.edu.cn^',
-    '@@||tracker.openbittorrent.com^',
-    '@@||tracker.chdbits.org^',
-    '@@||tracker.m-team.cc^',
-    '@@||tracker.keepfrds.com^',
-    '@@||tracker.hdcmct.org^',
-    '@@||tracker.fastdownload.xyz^',
-    '@@||tracker.bt4g.com^',
-    '@@||tracker.publictorrent.net^',
+    '@@||tongji.*kuwo.cn^',
+);
+
+//针对上游赦免规则anti-AD不予赦免的规则，即赦免名单的黑名单
+$ARR_WHITE_RULE_BLK_LIST = array(
+    '@@||ads.nipr.ac.jp^' => null,
+);
+
+//针对上游通配符规则中anti-AD不予采信的规则，即通配符黑名单
+$ARR_WILD_BLK_LIST = array(
+    'cnt*rambler.ru' => null,
 );
 
 if(PHP_SAPI != 'cli'){
@@ -136,6 +138,20 @@ while(!feof($wild_fp)){
     if(!preg_match('/^\|\|?([\w\-\.\*]+?)\^(\$([^=]+?,)?(image|third-party|script)(,[^=]+)?)?$/', $wild_row, $matches)){
         continue;
     }
+
+    if(array_key_exists($matches[1], $ARR_WILD_BLK_LIST)){
+        continue;
+    }
+
+    $matched = false;
+    foreach($ARR_REGEX_LIST as $regex_str => $regex_row){
+        if(preg_match($regex_str, str_replace('*', '',$matches[1]))){
+            $matched = true;
+        }
+    }
+    if($matched){
+        continue;
+    }
     $arr_wild_src[$matches[1]] = $wild_row;
 }
 fclose($wild_fp);
@@ -168,13 +184,13 @@ while(!feof($src_fp)){
         continue;
     }
 
-    foreach ($arr_wild_src as $core_str => $wild_row){
+    foreach($arr_wild_src as $core_str => $wild_row){
         $match_rule = str_replace('*', '.*', $core_str);
+        if(!array_key_exists($core_str, $wrote_wild)){
+            fwrite($new_fp, "||${core_str}^\n");
+            $wrote_wild[$core_str] = 1;
+        }
         if(preg_match("/\|${match_rule}/", $row)){
-            if(!array_key_exists($core_str, $wrote_wild)){
-                fwrite($new_fp, "||${core_str}^\n");
-                $wrote_wild[$core_str] = 1;
-            }
             $matched = true;
             break;
         }
@@ -190,7 +206,7 @@ while(!feof($src_fp)){
 $wrote_whitelist = array();
 $whiterule = file(WHITERULE_SRC, FILE_SKIP_EMPTY_LINES);
 $ARR_WHITE_RULE_LIST = array_merge($ARR_WHITE_RULE_LIST, $whiterule);
-foreach ($ARR_WHITE_RULE_LIST as $row){
+foreach($ARR_WHITE_RULE_LIST as $row){
     if(empty($row) || $row{0} !== '@' || $row{1} !== '@'){
         continue;
     }
@@ -198,6 +214,11 @@ foreach ($ARR_WHITE_RULE_LIST as $row){
     if(!preg_match('/@@\|\|([0-9a-z\.\-\*]+?)\^/', $row, $matches)){
         continue;
     }
+
+    if(array_key_exists("@@||${matches[1]}^", $ARR_WHITE_RULE_BLK_LIST)){
+        continue;
+    }
+
     foreach($wrote_wild as $core_str => $val){
         if($core_str{0} === '/'){
             $match_rule = $core_str;
@@ -205,8 +226,8 @@ foreach ($ARR_WHITE_RULE_LIST as $row){
             $match_rule = str_replace('*', '.*', $core_str);
             $match_rule = "/${match_rule}/";
         }
-        if(preg_match($match_rule, $matches[1])) {
-            $domain = addressMaker::extract_main_domain($matches[1]); //@TODO 注意！这里假设白名单域名无通配符
+        if(preg_match($match_rule, $matches[1])){
+            $domain = addressMaker::extract_main_domain($matches[1]);
             if(array_key_exists($domain, $black_domain_list) ||
                 (is_array($black_domain_list[$domain]) && in_array($matches[1], $black_domain_list[$domain]))
             ){
